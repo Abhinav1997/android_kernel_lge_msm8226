@@ -10,7 +10,6 @@
  * GNU General Public License for more details.
  */
 
-
 #include <linux/init.h>
 #include <linux/err.h>
 #include <linux/module.h>
@@ -35,6 +34,7 @@
 
 #include "msm-pcm-q6-v2.h"
 #include "msm-pcm-routing-v2.h"
+
 
 static struct audio_locks the_locks;
 
@@ -470,6 +470,7 @@ static int msm_pcm_playback_copy(struct snd_pcm_substream *substream, int a,
 			(atomic_read(&prtd->out_count)), 5 * HZ);
 	if (!ret) {
 		pr_err("%s: wait_event_timeout failed\n", __func__);
+		panic("TD:151620, please get dump and contact WX-BSP-Audio@lge.com");
 		goto fail;
 	}
 
@@ -934,8 +935,7 @@ static __devinit int msm_pcm_probe(struct platform_device *pdev)
 	}
 
 	if (of_property_read_bool(pdev->dev.of_node,
-				"qti,msm-pcm-low-latency")) {
-
+				"qti,msm-pcm-low-latency")){
 		pdata->perf_mode = LOW_LATENCY_PCM_MODE;
 		rc = of_property_read_string(pdev->dev.of_node,
 			"qti,latency-level", &latency_level);

@@ -1109,11 +1109,16 @@ static int setup_event_queue(void *inst,
 				struct video_device *pvdev)
 {
 	int rc = 0;
+	unsigned long flags;
 	struct msm_vidc_inst *vidc_inst = (struct msm_vidc_inst *)inst;
-	spin_lock_init(&pvdev->fh_lock);
+
+	//watchdog patch, to protect spinlock acquirement between cpu0 and cpu1
+	spin_lock_irqsave(&pvdev->fh_lock, flags);
 	INIT_LIST_HEAD(&pvdev->fh_list);
 
 	v4l2_fh_init(&vidc_inst->event_handler, pvdev);
+	spin_unlock_irqrestore(&pvdev->fh_lock, flags);
+
 	v4l2_fh_add(&vidc_inst->event_handler);
 
 	return rc;
@@ -1363,6 +1368,9 @@ int msm_vidc_close(void *instance)
 	else if (inst->session_type == MSM_VIDC_ENCODER)
 		msm_venc_ctrl_deinit(inst);
 
+	for (i = 0; i < MAX_PORT_NUM; i++)
+		vb2_queue_release(&inst->bufq[i].vb2_bufq);
+
 	cleanup_instance(inst);
 	if (inst->state != MSM_VIDC_CORE_INVALID &&
 		core->state != VIDC_CORE_INVALID)
@@ -1372,8 +1380,6 @@ int msm_vidc_close(void *instance)
 	if (rc)
 		dprintk(VIDC_ERR,
 			"Failed to move video instance to uninit state\n");
-	for (i = 0; i < MAX_PORT_NUM; i++)
-		vb2_queue_release(&inst->bufq[i].vb2_bufq);
 
 	pr_info(VIDC_DBG_TAG "Closed video instance: %p\n", VIDC_INFO, inst);
 	kfree(inst);
