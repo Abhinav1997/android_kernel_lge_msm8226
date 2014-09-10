@@ -1514,9 +1514,8 @@ static void reg_process_hint(struct regulatory_request *reg_request,
 	if (reg_initiator == NL80211_REGDOM_SET_BY_DRIVER &&
 	    !wiphy) {
 #else
-	// QCT temp patch to fix kernel crash
 	if ((reg_initiator == NL80211_REGDOM_SET_BY_DRIVER ||
-		reg_initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE) && !wiphy) {
+	     reg_initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE) && !wiphy) {
 #endif
 		kfree(reg_request);
 		return;
